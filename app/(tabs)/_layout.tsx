@@ -70,7 +70,7 @@ export default function TabLayout() {
     >
       {/* 待办 */}
       <Tabs.Screen
-        name="todos"
+        name="index"
         options={{
           title: "待办清单",
           tabBarIcon: ({ color }) => (

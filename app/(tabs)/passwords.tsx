@@ -1,6 +1,5 @@
 import PasswordItem from "@/components/PasswordItem";
 import Tags from "@/components/Tags";
-import { passwordsData } from "@/constants/taskData";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Feather from "@expo/vector-icons/Feather";
@@ -11,9 +10,42 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
+import usePasswordTagsDB from "@/db/password_tags";
+import { ITag } from "@/types/taskTypes";
+import { useEffect, useState } from "react";
+import { IPasswordItem } from "@/types/passwordTypes";
+
+const allTag: ITag = {
+  key: "all",
+  value: "全部",
+  created_at: "",
+  updated_at: "",
+};
 
 const Passwords = () => {
   const colorScheme = useColorScheme();
+  const { getAllTags } = usePasswordTagsDB();
+  const [tagList, setTagList] = useState<ITag[]>([]); // 标签列表
+  const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([]); // 密码列表
+  const [selectedTag, setSelectedTag] = useState<ITag>(allTag); // 当前选中的标签
+  const [page, setPage] = useState(1); // 当前页码
+  const [total, setTotal] = useState(0); // 总数
+  const [hasMore, setHasMore] = useState(false); // 是否有更多数据
+
+  const queryTagList = async () => {
+    const tagList = await getAllTags();
+    console.log("标签列表：", tagList);
+    setTagList(() => {
+      const list = tagList || [];
+      list.unshift(allTag);
+      return list;
+    });
+  };
+
+  useEffect(() => {
+    console.log("触发页面初始化~~");
+    queryTagList();
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -63,13 +95,11 @@ const Passwords = () => {
           <View>
             <Tags.Group
               defaultKey="all"
-              tags={[
-                { key: "all", value: "全部" },
-                { key: "work", value: "工作" },
-                { key: "life", value: "生活" },
-                { key: "health", value: "健康" },
-                { key: "study", value: "学习" },
-              ]}
+              tags={tagList}
+              onChange={(tag) => {
+                console.log("选中了标签：", tag);
+                setSelectedTag(tag);
+              }}
             />
           </View>
           {/* 汇总栏 */}

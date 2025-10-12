@@ -10,7 +10,6 @@ export interface IPasswordItem {
   username: string; // 用户名
   password: string; // 密码
   website?: string; // 网站
-  category: string; // 分类
   notes?: string; // 备注
   createdAt: string; // 创建时间
   lastUsed?: string; // 最后使用时间
