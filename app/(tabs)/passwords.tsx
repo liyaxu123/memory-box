@@ -1,6 +1,7 @@
 import PasswordItem from "@/components/PasswordItem";
 import Tags from "@/components/Tags";
 import { Colors } from "@/constants/theme";
+import usePasswordDB from "@/db/password";
 import usePasswordTagsDB from "@/db/password_tags";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { IPasswordItem } from "@/types/passwordTypes";
@@ -25,21 +26,9 @@ const allTag: ITag = {
 const Passwords = () => {
   const colorScheme = useColorScheme();
   const { getAllTags } = usePasswordTagsDB();
+  const { getPasswords } = usePasswordDB();
   const [tagList, setTagList] = useState<ITag[]>([]); // 标签列表
-  const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([
-    {
-      id: "1",
-      name: "百度",
-      icon: "AntDesign::baidu",
-      username: "admin",
-      password: "123456",
-      website: "https://www.baidu.com",
-      notes: "百度一下，你就知道",
-      createdAt: "2021-09-01",
-      lastUsed: "2021-09-01",
-      tag: allTag,
-    },
-  ]); // 密码列表
+  const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([]); // 密码列表
   const [selectedTag, setSelectedTag] = useState<ITag>(allTag); // 当前选中的标签
   const [page, setPage] = useState(1); // 当前页码
   const [total, setTotal] = useState(0); // 总数
@@ -47,7 +36,6 @@ const Passwords = () => {
 
   const queryTagList = async () => {
     const tagList = await getAllTags();
-    console.log("标签列表：", tagList);
     setTagList(() => {
       const list = tagList || [];
       list.unshift(allTag);
@@ -55,9 +43,50 @@ const Passwords = () => {
     });
   };
 
-  useEffect(() => {
-    console.log("触发页面初始化~~");
+  const queryPasswordList = async (
+    page: number,
+    tag?: ITag,
+    append: boolean = false
+  ) => {
+    try {
+      const actualTag = tag || selectedTag;
+      const res = await getPasswords({
+        page,
+        pageSize: 10,
+        tagKey: actualTag?.key === "all" ? undefined : actualTag?.key,
+      });
+      // console.log("列表数据：", res);
+      const list = (res?.passwords || []) as IPasswordItem[];
+      if (append) {
+        // 追加模式：将新数据追加到现有数据后面
+        setPasswordsData((prevData) => [...prevData, ...list]);
+      } else {
+        // 替换模式：直接替换现有数据（用于刷新或切换标签）
+        setPasswordsData(list);
+      }
+      setTotal(res?.total || 0);
+      setHasMore(res?.hasMore || false);
+      return list;
+    } catch (error) {
+      console.log(error);
+      setHasMore(false);
+    }
+  };
+
+  const refreshTodoList = () => {
+    setPasswordsData([]);
+    setPage(1);
+    setHasMore(false);
+    init();
+  };
+
+  const init = () => {
     queryTagList();
+    queryPasswordList(1);
+  };
+
+  useEffect(() => {
+    init();
   }, []);
 
   const styles = StyleSheet.create({
@@ -110,14 +139,15 @@ const Passwords = () => {
               defaultKey="all"
               tags={tagList}
               onChange={(tag) => {
-                console.log("选中了标签：", tag);
                 setSelectedTag(tag);
+                setPage(1);
+                queryPasswordList(1, tag);
               }}
             />
           </View>
           {/* 汇总栏 */}
           <View style={styles.totalInfo}>
-            <Text>共 4 个密码</Text>
+            <Text>共 {total} 个密码</Text>
 
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
@@ -133,7 +163,7 @@ const Passwords = () => {
           <FlatList
             refreshing={false}
             data={passwordsData}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id!}
             ListHeaderComponent={() => <View style={{ height: 16 }} />}
             renderItem={({ item, index, separators }) => (
               <TouchableHighlight
@@ -153,10 +183,14 @@ const Passwords = () => {
               </View>
             }
             onRefresh={() => {
-              console.log("刷新了~~");
+              refreshTodoList();
             }}
-            onEndReached={() => {
-              console.log("触底了~~");
+            onEndReached={async () => {
+              if (hasMore) {
+                const newPage = page + 1;
+                await queryPasswordList(newPage, undefined, true);
+                setPage(newPage);
+              }
             }}
           />
         </View>

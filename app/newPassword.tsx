@@ -1,7 +1,7 @@
 import IconPicker, { IconProp } from "@/components/IconPicker";
 import Tags from "@/components/Tags";
-import useTagsDB from "@/db/tags";
-import useTodosDB from "@/db/todos";
+import usePasswordTagsDB from "@/db/password_tags";
+import usePasswordDB from "@/db/password";
 import { ITag } from "@/types/taskTypes";
 import Button from "@ant-design/react-native/lib/button";
 import Input from "@ant-design/react-native/lib/input";
@@ -17,8 +17,8 @@ import BottomSheet from "@gorhom/bottom-sheet";
 import IconView from "@/components/IconView";
 
 const App = () => {
-  const { getAllTags, createTag } = useTagsDB();
-  const { addTodo } = useTodosDB();
+  const { getAllTags, createTag } = usePasswordTagsDB();
+  const { createPassword } = usePasswordDB();
   const [selectTag, setSelectTag] = useState<ITag>(); // 当前选择的标签
   const [tagList, setTagList] = useState<ITag[]>([]);
   const [name, setName] = useState(""); // 网站/应用名称
@@ -26,7 +26,7 @@ const App = () => {
   const [password, setPassword] = useState(""); // 密码
   const [iconName, setIconName] = useState(""); // 图标名称
   const [website, setWebsite] = useState(""); // 网站地址
-  const [description, setDescription] = useState(""); // 备注
+  const [notes, setNotes] = useState(""); // 备注
   const [selectTagModalVisible, setSelectTagModalVisible] = useState(false); // 选择标签模态框是否可见
   const [submitLoading, setSubmitLoading] = useState(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -42,13 +42,29 @@ const App = () => {
 
   const resetValues = () => {
     setName("");
-    setDescription("");
+    setUsername("");
+    setPassword("");
+    setIconName("");
+    setWebsite("");
+    setNotes("");
     setSelectTag(undefined);
   };
 
   const handleSubmit = async () => {
     if (!name) {
-      Toast.fail("请输入任务名称");
+      Toast.fail("请输入网站/应用名称");
+      return;
+    }
+    if (!username) {
+      Toast.fail("请输入用户名");
+      return;
+    }
+    if (!password) {
+      Toast.fail("请输入密码");
+      return;
+    }
+    if (!iconName) {
+      Toast.fail("请选择图标");
       return;
     }
     if (!selectTag) {
@@ -58,13 +74,14 @@ const App = () => {
 
     try {
       setSubmitLoading(true);
-      await addTodo({
+      await createPassword({
         name,
-        description,
-        completed: false,
-        priority: priority[0],
+        username,
+        password,
+        icon: iconName,
+        website,
+        notes,
         tag: selectTag,
-        dueDate: dayjs(dueDate).format("YYYY-MM-DD HH:mm:ss"),
       });
       resetValues();
       Toast.success("新建成功");
@@ -333,8 +350,8 @@ const App = () => {
               rows={5}
               placeholder="请输入备注"
               style={{ paddingVertical: 5 }}
-              value={description}
-              onChangeText={setDescription}
+              value={notes}
+              onChangeText={setNotes}
             />
           </List>
 
