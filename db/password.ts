@@ -58,7 +58,7 @@ const usePasswordDB = () => {
         IPasswordItem & { tag: { key: number; value: string } }
       >(
         `SELECT t.*, tg.value as tagValue FROM passwords t 
-       LEFT JOIN tags tg ON t.tagKey = tg.key 
+       LEFT JOIN password_tags tg ON t.tagKey = tg.key 
        ${whereClause} 
        ORDER BY t.created_at DESC 
        LIMIT ? OFFSET ?`,
@@ -68,7 +68,7 @@ const usePasswordDB = () => {
       // 查询总数
       const totalResult = await db.getFirstAsync<{ count: number }>(
         `SELECT COUNT(*) as count FROM passwords t 
-       LEFT JOIN tags tg ON t.tagKey = tg.key 
+       LEFT JOIN password_tags tg ON t.tagKey = tg.key 
        ${whereClause}`,
         queryParams
       );
