@@ -86,7 +86,6 @@ const Todos = () => {
     append: boolean = false
   ) => {
     try {
-      console.log("page", page);
       const actualTag = tag || selectedTag;
       const res = await getTodos({
         page,
@@ -113,7 +112,6 @@ const Todos = () => {
   };
 
   const refreshTodoList = () => {
-    console.log("触发下拉刷新了~~");
     setTaskData([]);
     setPage(1);
     setHasMore(false);
@@ -165,7 +163,6 @@ const Todos = () => {
   };
 
   useEffect(() => {
-    console.log("触发页面初始化~~");
     init();
   }, []);
 
@@ -237,7 +234,6 @@ const Todos = () => {
           }}
           onEndReached={async () => {
             if (hasMore) {
-              console.log("触发加载更多了~~");
               const newPage = page + 1;
               await queryTodoList(newPage, undefined, true);
               setPage(newPage);

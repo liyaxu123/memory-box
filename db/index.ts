@@ -65,8 +65,6 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
   // 创建 passwords 数据表
   await db.execAsync(createPasswordsTableSql);
 
-  alert(`migrateDbIfNeeded执行了，数据库初始化完成`);
-
   // // 数据库版本
   // const DATABASE_VERSION = 1;
   // // 获取当前数据库版本

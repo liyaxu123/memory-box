@@ -1,8 +1,12 @@
 import PasswordItem from "@/components/PasswordItem";
 import Tags from "@/components/Tags";
 import { Colors } from "@/constants/theme";
+import usePasswordTagsDB from "@/db/password_tags";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { IPasswordItem } from "@/types/passwordTypes";
+import { ITag } from "@/types/taskTypes";
 import Feather from "@expo/vector-icons/Feather";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -10,10 +14,6 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
-import usePasswordTagsDB from "@/db/password_tags";
-import { ITag } from "@/types/taskTypes";
-import { useEffect, useState } from "react";
-import { IPasswordItem } from "@/types/passwordTypes";
 
 const allTag: ITag = {
   key: "all",
@@ -26,7 +26,20 @@ const Passwords = () => {
   const colorScheme = useColorScheme();
   const { getAllTags } = usePasswordTagsDB();
   const [tagList, setTagList] = useState<ITag[]>([]); // 标签列表
-  const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([]); // 密码列表
+  const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([
+    {
+      id: "1",
+      name: "百度",
+      icon: "AntDesign::baidu",
+      username: "admin",
+      password: "123456",
+      website: "https://www.baidu.com",
+      notes: "百度一下，你就知道",
+      createdAt: "2021-09-01",
+      lastUsed: "2021-09-01",
+      tag: allTag,
+    },
+  ]); // 密码列表
   const [selectedTag, setSelectedTag] = useState<ITag>(allTag); // 当前选中的标签
   const [page, setPage] = useState(1); // 当前页码
   const [total, setTotal] = useState(0); // 总数

@@ -106,6 +106,10 @@ export default function TabLayout() {
               <Button
                 icon={<Feather name="plus" size={20} color="#fff" />}
                 style={{ marginRight: 20, borderRadius: 18 }}
+                onPress={() => {
+                  // 跳转到新建密码页面
+                  router.push("/newPassword");
+                }}
               />
             </>
           ),

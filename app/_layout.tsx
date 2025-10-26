@@ -55,6 +55,13 @@ export default function RootLayout() {
                     headerTitleAlign: "center",
                   }}
                 />
+                <Stack.Screen
+                  name="newPassword"
+                  options={{
+                    title: "新建密码",
+                    headerTitleAlign: "center",
+                  }}
+                />
               </Stack>
               <StatusBar style="auto" />
             </GestureHandlerRootView>

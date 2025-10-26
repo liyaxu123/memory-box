@@ -2,15 +2,15 @@ import { Tag } from "@/components/Tags";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { IPasswordItem } from "@/types/passwordTypes";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import Feather from "@expo/vector-icons/Feather";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import IconView from "../IconView";
 
 interface PasswordItemProps {
   passData: IPasswordItem;
 }
+
 const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
   const colorScheme = useColorScheme();
   const [showPassword, setShowPassword] = useState(false); // 密码是否显示
@@ -48,7 +48,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
       <View style={styles.cardHeader}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {/* 图标 */}
-          <FontAwesome name={passData?.icon} size={16} color="#0a0a0a" />
+          <IconView name={passData?.icon} size={16} color="#0a0a0a" />
           {/* 名称 */}
           <Text style={{ fontSize: 16 }}>{passData?.name}</Text>
         </View>
