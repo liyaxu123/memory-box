@@ -9,6 +9,8 @@ import List from "@ant-design/react-native/lib/list";
 import Modal from "@ant-design/react-native/lib/modal";
 import Toast from "@ant-design/react-native/lib/toast";
 import Feather from "@expo/vector-icons/Feather";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import {
   FlatList,
@@ -25,7 +27,9 @@ const allTag: ITag = {
   updated_at: "",
 };
 
+const audioSource = require("@/assets/audios/successed02.mp3");
 const Todos = () => {
+  const player = useAudioPlayer(audioSource);
   const { getAllTags } = useTagsDB();
   const { getTodos, toggleCompletedById, deleteTodoById } = useTodosDB();
   const colorScheme = useColorScheme();
@@ -121,6 +125,13 @@ const Todos = () => {
   // 切换完成状态
   const handleCompletedChange = async (taskId: string, completed: boolean) => {
     try {
+      if (completed) {
+        // 手机震动
+        Haptics.selectionAsync();
+        // 播放完成音效
+        player.seekTo(0);
+        player.play();
+      }
       await toggleCompletedById(taskId, completed);
       // 更新列表数据
       setTaskData((prevData) =>

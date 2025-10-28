@@ -1,3 +1,4 @@
+import Feather from "@expo/vector-icons/Feather";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetFlatList,
@@ -5,10 +6,9 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { forwardRef, useCallback, useMemo, useState } from "react";
-import { Platform, Pressable, StyleSheet, View, Text } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import IconView from "../IconView";
 import { IconsArray } from "./IconConstants";
-import Feather from "@expo/vector-icons/Feather";
 
 export interface IconProp {
   name: string;

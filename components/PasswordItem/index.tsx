@@ -5,6 +5,7 @@ import { IPasswordItem } from "@/types/passwordTypes";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import CopyTextButton from "../CopyTextButton";
 import IconView from "../IconView";
 
 interface PasswordItemProps {
@@ -69,11 +70,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
           <Text>用户名</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text>{passData?.username}</Text>
-            <TouchableOpacity
-              style={{ paddingVertical: 4, paddingHorizontal: 10 }}
-            >
-              <Feather name="copy" size={16} color="#0a0a0a" />
-            </TouchableOpacity>
+            <CopyTextButton text={passData?.username} />
           </View>
         </View>
         <View
@@ -99,11 +96,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
                   color="#0a0a0a"
                 />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={{ paddingVertical: 4, paddingHorizontal: 10 }}
-              >
-                <Feather name="copy" size={16} color="#0a0a0a" />
-              </TouchableOpacity>
+              <CopyTextButton text={passData?.password} />
             </View>
           </View>
         </View>
@@ -116,11 +109,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
           <Text>网站</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={{ color: "#155dfc" }}>{passData?.website}</Text>
-            <TouchableOpacity
-              style={{ paddingVertical: 4, paddingHorizontal: 10 }}
-            >
-              <Feather name="copy" size={16} color="#0a0a0a" />
-            </TouchableOpacity>
+            <CopyTextButton text={passData?.website} />
           </View>
         </View>
       </View>
