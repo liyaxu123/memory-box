@@ -6,6 +6,7 @@ import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CopyTextButton from "../CopyTextButton";
+import { authenticate } from "@/utils/auth";
 import IconView from "../IconView";
 
 interface PasswordItemProps {
@@ -16,8 +17,18 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
   const colorScheme = useColorScheme();
   const [showPassword, setShowPassword] = useState(false); // 密码是否显示
 
-  const handleShowPassword = () => {
-    setShowPassword(!showPassword);
+  const handleShowPassword = async () => {
+    if (showPassword === true) {
+      setShowPassword(false);
+    } else {
+      const success = await authenticate({
+        promptMessage: "请进行指纹或面部认证",
+        fallbackLabel: "使用密码登录",
+      });
+      if (success) {
+        setShowPassword(true);
+      }
+    }
   };
 
   const styles = StyleSheet.create({
@@ -96,7 +107,7 @@ const PasswordItem: React.FC<PasswordItemProps> = ({ passData }) => {
                   color="#0a0a0a"
                 />
               </TouchableOpacity>
-              <CopyTextButton text={passData?.password} />
+              <CopyTextButton text={passData?.password} needFingerprint />
             </View>
           </View>
         </View>
