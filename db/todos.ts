@@ -1,4 +1,4 @@
-import { ITaskItem } from "@/types/taskTypes";
+import { ITag, ITaskItem } from "@/types/taskTypes";
 import { useSQLiteContext } from "expo-sqlite";
 
 const useTodosDB = () => {
@@ -144,12 +144,82 @@ const useTodosDB = () => {
     }
   };
 
+  // 根据id查询任务并关联查询标签信息
+  const getTodoById = async (id: string) => {
+    try {
+      // 关联查询任务和标签的完整信息
+      const result = await db.getFirstAsync<
+        ITaskItem & {
+          tagKey: number;
+          tagValue: string;
+          tagCreatedAt: string;
+          tagUpdatedAt: string;
+        }
+      >(
+        `SELECT 
+            t.*,
+            tg.key as tagKey,
+            tg.value as tagValue,
+            tg.created_at as tagCreatedAt,
+            tg.updated_at as tagUpdatedAt
+           FROM todos t 
+           LEFT JOIN tags tg ON t.tagKey = tg.key 
+           WHERE t.id = ?`,
+        [id]
+      );
+
+      if (!result) {
+        return null;
+      }
+
+      // 格式化返回数据，添加完整的标签信息
+      const formattedData = {
+        ...result,
+        tag: {
+          key: result.tagKey,
+          value: result.tagValue,
+          created_at: result.tagCreatedAt,
+          updated_at: result.tagUpdatedAt,
+        },
+      };
+
+      return formattedData as unknown as ITaskItem & { tag: ITag };
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // 根据 id 更新任务
+  const updateTodoById = async (
+    id: string,
+    data: Omit<ITaskItem, "completed" | "id">
+  ) => {
+    try {
+      const res = await db.runAsync(
+        `UPDATE todos SET title = ?, description = ?, dueDate = ?, priority = ?, tagKey = ? WHERE id = ?`,
+        [
+          data.title,
+          data.description || "",
+          data.dueDate || null,
+          data.priority,
+          data.tag.key,
+          id,
+        ]
+      );
+      return res;
+    } catch (err) {
+      throw err;
+    }
+  };
+
   return {
     addTodo,
+    getTodoById,
     getTodos,
     getAllTodos,
     toggleCompletedById,
     deleteTodoById,
+    updateTodoById,
   };
 };
 

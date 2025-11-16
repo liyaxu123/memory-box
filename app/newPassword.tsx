@@ -1,7 +1,8 @@
 import IconPicker, { IconProp } from "@/components/IconPicker";
+import IconView from "@/components/IconView";
 import Tags from "@/components/Tags";
-import usePasswordTagsDB from "@/db/password_tags";
 import usePasswordDB from "@/db/password";
+import usePasswordTagsDB from "@/db/password_tags";
 import { ITag } from "@/types/taskTypes";
 import Button from "@ant-design/react-native/lib/button";
 import Input from "@ant-design/react-native/lib/input";
@@ -10,15 +11,17 @@ import Modal from "@ant-design/react-native/lib/modal";
 import TextareaItem from "@ant-design/react-native/lib/textarea-item";
 import Toast from "@ant-design/react-native/lib/toast";
 import Feather from "@expo/vector-icons/Feather";
-import dayjs from "dayjs";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import BottomSheet from "@gorhom/bottom-sheet";
-import IconView from "@/components/IconView";
 
 const App = () => {
+  const { id } = useLocalSearchParams();
+  const navigation = useNavigation();
   const { getAllTags, createTag } = usePasswordTagsDB();
-  const { createPassword } = usePasswordDB();
+  const { createPassword, getPasswordById, updatePasswordById } =
+    usePasswordDB();
   const [selectTag, setSelectTag] = useState<ITag>(); // 当前选择的标签
   const [tagList, setTagList] = useState<ITag[]>([]);
   const [name, setName] = useState(""); // 网站/应用名称
@@ -50,6 +53,50 @@ const App = () => {
     setSelectTag(undefined);
   };
 
+  const createSubmit = async () => {
+    try {
+      setSubmitLoading(true);
+      await createPassword({
+        name,
+        username,
+        password,
+        icon: iconName,
+        website,
+        notes,
+        tag: selectTag as ITag,
+      });
+      resetValues();
+      Toast.success("新建成功");
+    } catch (error) {
+      console.log(error);
+      Toast.fail("新建失败");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const editSubmit = async () => {
+    try {
+      setSubmitLoading(true);
+      await updatePasswordById(id as string, {
+        name,
+        username,
+        password,
+        icon: iconName,
+        website,
+        notes,
+        tag: selectTag as ITag,
+      });
+      resetValues();
+      Toast.success("修改成功");
+    } catch (error) {
+      console.log(error);
+      Toast.fail("修改失败");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!name) {
       Toast.fail("请输入网站/应用名称");
@@ -72,24 +119,10 @@ const App = () => {
       return;
     }
 
-    try {
-      setSubmitLoading(true);
-      await createPassword({
-        name,
-        username,
-        password,
-        icon: iconName,
-        website,
-        notes,
-        tag: selectTag,
-      });
-      resetValues();
-      Toast.success("新建成功");
-    } catch (error) {
-      console.log(error);
-      Toast.fail("新建失败");
-    } finally {
-      setSubmitLoading(false);
+    if (id) {
+      editSubmit();
+    } else {
+      createSubmit();
     }
   };
 
@@ -104,9 +137,27 @@ const App = () => {
     bottomSheetRef.current?.close();
   };
 
+  const initForm = async () => {
+    const data = await getPasswordById(id as string);
+    if (data) {
+      setName(data.name);
+      setUsername(data.username);
+      setPassword(data.password);
+      setIconName(data.icon);
+      setWebsite(data.website || "");
+      setNotes(data.notes || "");
+      setSelectTag(data.tag);
+    }
+  };
+
   useEffect(() => {
     queryTagList();
-  }, []);
+    if (id) {
+      // 设置页面标题为编辑密码
+      navigation.setOptions({ title: "编辑密码" });
+      initForm();
+    }
+  }, [id]);
 
   return (
     <View style={styles.container}>
@@ -287,7 +338,7 @@ const App = () => {
             <List.Item
               arrow="down"
               onPress={() => {
-                bottomSheetRef.current?.snapToPosition("50%");
+                bottomSheetRef.current?.expand();
               }}
               extra={<IconView name={iconName} size={20} color="#333" />}
             >

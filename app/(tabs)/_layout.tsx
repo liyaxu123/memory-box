@@ -115,16 +115,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* 卡包 */}
-      <Tabs.Screen
-        name="cards"
-        options={{
-          title: "卡包",
-          tabBarIcon: ({ color }) => (
-            <Feather name="credit-card" size={24} color={color} />
-          ),
-        }}
-      />
       {/* 我的 */}
       <Tabs.Screen
         name="profile"

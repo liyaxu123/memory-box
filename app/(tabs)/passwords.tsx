@@ -1,3 +1,4 @@
+import PasswordDrawer from "@/components/PasswordDrawer";
 import PasswordItem from "@/components/PasswordItem";
 import Tags from "@/components/Tags";
 import { Colors } from "@/constants/theme";
@@ -6,15 +7,21 @@ import usePasswordTagsDB from "@/db/password_tags";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { IPasswordItem } from "@/types/passwordTypes";
 import { ITag } from "@/types/taskTypes";
+import { authenticate } from "@/utils/auth";
+import Toast from "@ant-design/react-native/lib/toast";
 import Feather from "@expo/vector-icons/Feather";
-import { useEffect, useState } from "react";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useRef, useState } from "react";
 import {
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableHighlight,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const allTag: ITag = {
   key: "all",
@@ -24,15 +31,18 @@ const allTag: ITag = {
 };
 
 const Passwords = () => {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const { getAllTags } = usePasswordTagsDB();
-  const { getPasswords } = usePasswordDB();
+  const { getPasswords, deletePasswordById } = usePasswordDB();
   const [tagList, setTagList] = useState<ITag[]>([]); // 标签列表
   const [passwordsData, setPasswordsData] = useState<IPasswordItem[]>([]); // 密码列表
   const [selectedTag, setSelectedTag] = useState<ITag>(allTag); // 当前选中的标签
   const [page, setPage] = useState(1); // 当前页码
   const [total, setTotal] = useState(0); // 总数
   const [hasMore, setHasMore] = useState(false); // 是否有更多数据
+  const [curRecord, setCurRecord] = useState<IPasswordItem>(); // 当前选中的密码
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const queryTagList = async () => {
     const tagList = await getAllTags();
@@ -85,9 +95,46 @@ const Passwords = () => {
     queryPasswordList(1);
   };
 
-  useEffect(() => {
-    init();
-  }, []);
+  // 使用useFocusEffect确保页面每次获得焦点时都重新加载数据
+  useFocusEffect(
+    useCallback(() => {
+      init();
+    }, [])
+  );
+
+  const handleDelete = async () => {
+    try {
+      const success = await authenticate({
+        promptMessage: "请进行指纹或面部认证",
+        fallbackLabel: "使用密码登录",
+      });
+      if (success) {
+        await deletePasswordById(curRecord?.id!);
+        // 更新列表数据
+        setPasswordsData((prevData) =>
+          prevData.filter((item) => item.id !== curRecord?.id)
+        );
+        // 更新总数
+        setTotal((prevCount) => prevCount - 1);
+        bottomSheetRef.current?.close();
+        Toast.success("删除成功");
+      }
+    } catch (error) {
+      console.log(error);
+      Toast.fail("删除失败");
+    }
+  };
+
+  const handleEdit = async () => {
+    const success = await authenticate({
+      promptMessage: "请进行指纹或面部认证",
+      fallbackLabel: "使用密码登录",
+    });
+    if (success) {
+      router.navigate(`/newPassword?id=${curRecord?.id}`);
+      bottomSheetRef.current?.close();
+    }
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -134,7 +181,7 @@ const Passwords = () => {
             </View>
           </TouchableHighlight>
           {/* 标签分类 */}
-          <View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <Tags.Group
               defaultKey="all"
               tags={tagList}
@@ -144,7 +191,7 @@ const Passwords = () => {
                 queryPasswordList(1, tag);
               }}
             />
-          </View>
+          </ScrollView>
           {/* 汇总栏 */}
           <View style={styles.totalInfo}>
             <Text>共 {total} 个密码</Text>
@@ -171,7 +218,13 @@ const Passwords = () => {
                 onShowUnderlay={separators.highlight}
                 onHideUnderlay={separators.unhighlight}
               >
-                <PasswordItem passData={item} />
+                <PasswordItem
+                  passData={item}
+                  onPress={() => {
+                    setCurRecord(item);
+                    bottomSheetRef.current?.expand();
+                  }}
+                />
               </TouchableHighlight>
             )}
             ListEmptyComponent={
@@ -195,6 +248,12 @@ const Passwords = () => {
           />
         </View>
       </View>
+
+      <PasswordDrawer
+        ref={bottomSheetRef}
+        onDelete={handleDelete}
+        onEdit={handleEdit}
+      />
     </>
   );
 };

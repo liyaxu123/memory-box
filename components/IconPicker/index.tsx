@@ -24,7 +24,7 @@ const IconPicker = forwardRef<BottomSheet, IconPickerProps>((props, ref) => {
   const { onSelect } = props || {};
   const [searchVal, setSearchVal] = useState("");
   const [selectedIcon, setSelectedIcon] = useState("");
-  const snapPoints = useMemo(() => ["50%"], []);
+  const snapPoints = useMemo(() => ["50%", "90%"], []);
 
   const iconList = useMemo(() => {
     return IconsArray.filter((item) =>

@@ -1,4 +1,5 @@
 import { IPasswordItem } from "@/types/passwordTypes";
+import { ITag } from "@/types/taskTypes";
 import { useSQLiteContext } from "expo-sqlite";
 
 const usePasswordDB = () => {
@@ -95,6 +96,51 @@ const usePasswordDB = () => {
     }
   };
 
+  // 根据id查询密码并关联查询标签信息
+  const getPasswordById = async (id: string) => {
+    try {
+      // 关联查询密码和标签的完整信息
+      const result = await db.getFirstAsync<
+        IPasswordItem & {
+          tagKey: number;
+          tagValue: string;
+          tagCreatedAt: string;
+          tagUpdatedAt: string;
+        }
+      >(
+        `SELECT 
+          t.*,
+          tg.key as tagKey,
+          tg.value as tagValue,
+          tg.created_at as tagCreatedAt,
+          tg.updated_at as tagUpdatedAt
+         FROM passwords t 
+         LEFT JOIN password_tags tg ON t.tagKey = tg.key 
+         WHERE t.id = ?`,
+        [id]
+      );
+
+      if (!result) {
+        return null;
+      }
+
+      // 格式化返回数据，添加完整的标签信息
+      const formattedData = {
+        ...result,
+        tag: {
+          key: result.tagKey,
+          value: result.tagValue,
+          created_at: result.tagCreatedAt,
+          updated_at: result.tagUpdatedAt,
+        },
+      };
+
+      return formattedData as unknown as IPasswordItem & { tag: ITag };
+    } catch (err) {
+      throw err;
+    }
+  };
+
   // 根据id 删除任务
   const deletePasswordById = async (id: string) => {
     try {
@@ -105,10 +151,60 @@ const usePasswordDB = () => {
     }
   };
 
+  // 根据 id 更新密码项
+  const updatePasswordById = async (id: string, data: IPasswordItem) => {
+    try {
+      const res = await db.runAsync(
+        `UPDATE passwords SET name = ?, username = ?, password = ?, icon = ?, website = ?, notes = ?, tagKey = ? WHERE id = ?`,
+        [
+          data.name,
+          data.username,
+          data.password,
+          data.icon,
+          data.website || "",
+          data.notes || "",
+          data.tag.key,
+          id,
+        ]
+      );
+      return res;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // 获取所有的密码项
+  const getAllPasswords = async () => {
+    try {
+      const res = await db.getAllAsync<IPasswordItem>(
+        `SELECT * FROM passwords`
+      );
+      return res;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // 获取密码本的总条数
+  const getPasswordCount = async () => {
+    try {
+      const res = await db.getFirstAsync<{ count: number }>(
+        `SELECT COUNT(*) as count FROM passwords`
+      );
+      return res?.count || 0;
+    } catch (err) {
+      throw err;
+    }
+  };
+
   return {
     createPassword,
     getPasswords,
+    getPasswordById,
     deletePasswordById,
+    getAllPasswords,
+    getPasswordCount,
+    updatePasswordById,
   };
 };
 

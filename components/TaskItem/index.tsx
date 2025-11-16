@@ -18,7 +18,7 @@ interface TaskItemProps {
   task: ITaskItem;
   // 切换完成状态
   onCompletedChange?: (value: boolean) => void;
-  onTitlePress?: () => void;
+  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -32,7 +32,7 @@ const priorityColor = {
 const TaskItem: React.FC<TaskItemProps> = ({
   task,
   onCompletedChange,
-  onTitlePress,
+  onPress,
   style,
 }) => {
   const colorScheme = useColorScheme();
@@ -117,52 +117,57 @@ const TaskItem: React.FC<TaskItemProps> = ({
           )}
         </Pressable>
       </View>
+
       <View style={styles.taskInfo}>
-        <View style={styles.taskTitleWrapper}>
-          {/* 标题 */}
-          <Text
-            style={[styles.taskTitle, task?.completed && styles.completedTitle]}
-            onPress={onTitlePress}
-          >
-            {task?.title}
-          </Text>
-          {/* 优先级 */}
-          <View style={styles.priority}>
-            <View
+        <Pressable onPress={onPress}>
+          <View style={styles.taskTitleWrapper}>
+            {/* 标题 */}
+            <Text
               style={[
-                styles.dot,
-                { backgroundColor: priorityColor[task?.priority] },
+                styles.taskTitle,
+                task?.completed && styles.completedTitle,
               ]}
-            ></View>
-            <Text style={{ color: "#6a7282", fontSize: FontSize.xs }}>
-              {PriorityMap[task?.priority]}
+            >
+              {task?.title}
             </Text>
-          </View>
-        </View>
-
-        {/* 描述 */}
-        <IsDisplay display={!!task?.description}>
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.description}>{task?.description}</Text>
-          </View>
-        </IsDisplay>
-
-        {/* 标签，日期 */}
-        <View style={styles.tagDateContainer}>
-          <Tag
-            text={task?.tag?.value || ""}
-            style={{ backgroundColor: "#f2edee" }}
-          />
-          {/* 日期 */}
-          <IsDisplay display={!!task?.dueDate}>
-            <View style={styles.dateContainer}>
-              <Feather name="calendar" size={12} color="#0a0a0a" />
-              <Text style={{ color: "#0a0a0a", fontSize: FontSize.xs }}>
-                {dayjs(task?.dueDate).format("YYYY-MM-DD")}
+            {/* 优先级 */}
+            <View style={styles.priority}>
+              <View
+                style={[
+                  styles.dot,
+                  { backgroundColor: priorityColor[task?.priority] },
+                ]}
+              ></View>
+              <Text style={{ color: "#6a7282", fontSize: FontSize.xs }}>
+                {PriorityMap[task?.priority]}
               </Text>
             </View>
+          </View>
+
+          {/* 描述 */}
+          <IsDisplay display={!!task?.description}>
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.description}>{task?.description}</Text>
+            </View>
           </IsDisplay>
-        </View>
+
+          {/* 标签，日期 */}
+          <View style={styles.tagDateContainer}>
+            <Tag
+              text={task?.tag?.value || ""}
+              style={{ backgroundColor: "#f2edee" }}
+            />
+            {/* 日期 */}
+            <IsDisplay display={!!task?.dueDate}>
+              <View style={styles.dateContainer}>
+                <Feather name="calendar" size={12} color="#0a0a0a" />
+                <Text style={{ color: "#0a0a0a", fontSize: FontSize.xs }}>
+                  {dayjs(task?.dueDate).format("YYYY-MM-DD")}
+                </Text>
+              </View>
+            </IsDisplay>
+          </View>
+        </Pressable>
       </View>
     </View>
   );

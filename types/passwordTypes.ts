@@ -11,7 +11,7 @@ export interface IPasswordItem {
   password: string; // 密码
   website?: string; // 网站
   notes?: string; // 备注
-  createdAt?: string; // 创建时间
+  created_at?: string; // 创建时间
   lastUsed?: string; // 最后使用时间
   tag: ITag; // 标签
 }

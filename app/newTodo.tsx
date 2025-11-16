@@ -14,6 +14,7 @@ import Feather from "@expo/vector-icons/Feather";
 import dayjs from "dayjs";
 import React, { JSX, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 
 // 优先级
 const priorityList = [
@@ -39,8 +40,10 @@ const priorityIconMap: Record<number, JSX.Element> = {
 };
 
 const App = () => {
+  const { id } = useLocalSearchParams();
+  const navigation = useNavigation();
   const { getAllTags, createTag } = useTagsDB();
-  const { addTodo } = useTodosDB();
+  const { addTodo, getTodoById, updateTodoById } = useTodosDB();
   const [dueDate, setDueDate] = useState(new Date()); // 截止日期
   const [selectTag, setSelectTag] = useState<ITag>(); // 当前选择的标签
   const [priority, setPriority] = useState([PriorityEnum.Low]); // 当前选择的优先级
@@ -67,16 +70,7 @@ const App = () => {
     setDueDate(new Date());
   };
 
-  const handleSubmit = async () => {
-    if (!title) {
-      Toast.fail("请输入任务名称");
-      return;
-    }
-    if (!selectTag) {
-      Toast.fail("请选择标签");
-      return;
-    }
-
+  const createSubmit = async () => {
     try {
       setSubmitLoading(true);
       await addTodo({
@@ -84,7 +78,7 @@ const App = () => {
         description,
         completed: false,
         priority: priority[0],
-        tag: selectTag,
+        tag: selectTag as ITag,
         dueDate: dayjs(dueDate).format("YYYY-MM-DD HH:mm:ss"),
       });
       resetValues();
@@ -97,15 +91,68 @@ const App = () => {
     }
   };
 
+  const editSubmit = async () => {
+    try {
+      setSubmitLoading(true);
+      await updateTodoById(id as string, {
+        title,
+        description,
+        priority: priority[0],
+        tag: selectTag as ITag,
+        dueDate: dayjs(dueDate).format("YYYY-MM-DD HH:mm:ss"),
+      });
+      resetValues();
+      Toast.success("更新成功");
+    } catch (error) {
+      console.log(error);
+      Toast.fail("更新失败");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!title) {
+      Toast.fail("请输入任务名称");
+      return;
+    }
+    if (!selectTag) {
+      Toast.fail("请选择标签");
+      return;
+    }
+
+    if (id) {
+      editSubmit();
+    } else {
+      createSubmit();
+    }
+  };
+
   const queryTagList = async () => {
     const tagList = await getAllTags();
     setTagList(tagList || []);
     return tagList;
   };
 
+  const initForm = async () => {
+    const data = await getTodoById(id as string);
+    if (data) {
+      setTitle(data.title);
+      setDescription(data?.description || "");
+      setSelectTag(data.tag);
+      setPriority([data?.priority || PriorityEnum.Low]);
+      setDueDate(dayjs(data?.dueDate || "").toDate());
+    }
+  };
+
   useEffect(() => {
     queryTagList();
-  }, []);
+    if (id) {
+      // 设置页面标题为编辑任务
+      navigation.setOptions({ title: "编辑任务" });
+      initForm();
+    }
+  }, [id]);
 
   return (
     <ScrollView keyboardShouldPersistTaps="handled" style={styles.container}>

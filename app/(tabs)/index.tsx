@@ -1,3 +1,4 @@
+import IconButton from "@/components/IconButton";
 import Tags from "@/components/Tags";
 import TaskItem from "@/components/TaskItem";
 import { Colors } from "@/constants/theme";
@@ -5,20 +6,22 @@ import useTagsDB from "@/db/tags";
 import useTodosDB from "@/db/todos";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ITag, ITaskItem } from "@/types/taskTypes";
-import List from "@ant-design/react-native/lib/list";
 import Modal from "@ant-design/react-native/lib/modal";
 import Toast from "@ant-design/react-native/lib/toast";
 import Feather from "@expo/vector-icons/Feather";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableHighlight,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 const allTag: ITag = {
   key: "all",
@@ -29,6 +32,7 @@ const allTag: ITag = {
 
 const audioSource = require("@/assets/audios/successed02.mp3");
 const Todos = () => {
+  const router = useRouter();
   const player = useAudioPlayer(audioSource);
   const { getAllTags } = useTagsDB();
   const { getTodos, toggleCompletedById, deleteTodoById } = useTodosDB();
@@ -173,9 +177,12 @@ const Todos = () => {
     queryTodoList(1);
   };
 
-  useEffect(() => {
-    init();
-  }, []);
+  // 使用useFocusEffect确保页面每次获得焦点时都重新加载数据
+  useFocusEffect(
+    useCallback(() => {
+      init();
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
@@ -189,7 +196,7 @@ const Todos = () => {
           </View>
         </TouchableHighlight>
         {/* 标签分类 */}
-        <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <Tags.Group
             defaultKey="all"
             tags={tagList}
@@ -199,7 +206,7 @@ const Todos = () => {
               queryTodoList(1, tag);
             }}
           />
-        </View>
+        </ScrollView>
         {/* 汇总栏 */}
         <View style={styles.totalInfo}>
           <Text>共 {total} 项任务</Text>
@@ -225,7 +232,7 @@ const Todos = () => {
                 onCompletedChange={(completed) =>
                   handleCompletedChange(item.id!, completed)
                 }
-                onTitlePress={() => {
+                onPress={() => {
                   setSelectedTask(item);
                   setModalVisible(true);
                 }}
@@ -274,47 +281,26 @@ const Todos = () => {
             }}
           />
 
-          <List>
-            <List.Item
-              thumb={
-                <Feather
-                  name="bookmark"
-                  size={18}
-                  style={{ marginRight: 10 }}
-                />
-              }
-              onPress={() => {}}
-            >
-              置顶
-            </List.Item>
-            <List.Item
-              thumb={
-                <Feather name="edit-3" size={18} style={{ marginRight: 10 }} />
-              }
-              onPress={() => {}}
-            >
-              编辑
-            </List.Item>
-            <List.Item
-              thumb={
-                <Feather name="star" size={18} style={{ marginRight: 10 }} />
-              }
-              onPress={() => {}}
-            >
-              收藏
-            </List.Item>
-            <List.Item
-              thumb={
-                <Feather name="share-2" size={18} style={{ marginRight: 10 }} />
-              }
-              onPress={() => {}}
-            >
-              分享
-            </List.Item>
-            <List.Item
-              thumb={
-                <Feather name="trash-2" size={18} style={{ marginRight: 10 }} />
-              }
+          <View
+            style={{
+              height: "100%",
+              flexDirection: "row",
+              marginTop: 15,
+              paddingHorizontal: 8,
+              gap: 4,
+            }}
+          >
+            <IconButton
+              label="编辑"
+              icon={<Feather name="edit-3" size={20} color="#6a7282" />}
+              onPress={() => {
+                router.navigate(`/newTodo?id=${selectedTask?.id}`);
+                setModalVisible(false);
+              }}
+            />
+            <IconButton
+              label="删除"
+              icon={<Feather name="trash-2" size={20} color="#6a7282" />}
               onPress={() => {
                 Modal.alert("删除任务", "您确定要永久删除此任务吗？", [
                   {
@@ -324,10 +310,8 @@ const Todos = () => {
                   { text: "确定", onPress: () => handleDelete() },
                 ]);
               }}
-            >
-              删除
-            </List.Item>
-          </List>
+            />
+          </View>
         </View>
         <View style={{ height: 40 }}></View>
       </Modal>
