@@ -21,7 +21,25 @@ const usePasswordTagsDB = () => {
   const getAllTags = async () => {
     try {
       // `getAllAsync()` 在你希望将所有结果获取为对象数组时非常有用。
-      const res = (await db.getAllAsync(`SELECT * FROM password_tags`)) as ITag[];
+      const res = (await db.getAllAsync(
+        `SELECT * FROM password_tags`
+      )) as ITag[];
+      return res;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // 插入标签
+  const insertTag = async (tag: ITag) => {
+    try {
+      const res = await db.runAsync(
+        `INSERT INTO password_tags (key, value, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+        tag.key,
+        tag.value,
+        tag.created_at,
+        tag.updated_at
+      );
       return res;
     } catch (error) {
       console.log(error);
@@ -31,6 +49,7 @@ const usePasswordTagsDB = () => {
   return {
     createTag,
     getAllTags,
+    insertTag,
   };
 };
 

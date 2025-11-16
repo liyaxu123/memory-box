@@ -1,10 +1,9 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
-import { IPasswordItem } from "@/types/passwordTypes";
 
 // 导出数据
-export async function exportData(data: IPasswordItem[]) {
+export async function exportData(data: any) {
   try {
     const json = JSON.stringify(data, null, 2);
     const file = new File(Paths.document, "passwords_backup.json"); // 创建文件对象
@@ -38,7 +37,7 @@ export async function importData() {
     if (result.canceled) return [];
     const fileUri = result.assets[0].uri;
     const file = new File(fileUri);
-    return JSON.parse(file.textSync() || "[]") as IPasswordItem[];
+    return JSON.parse(file.textSync() || "");
   } catch (error) {
     console.error("导入失败:", error);
     return [];

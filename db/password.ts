@@ -197,6 +197,31 @@ const usePasswordDB = () => {
     }
   };
 
+  // 插入数据
+  const insertPassword = async (
+    data: IPasswordItem & { tagKey: number; updated_at: string }
+  ) => {
+    try {
+      const res = await db.runAsync(
+        `INSERT INTO passwords (id, name, icon, username, password, website, notes, created_at, updated_at, lastUsed, tagKey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        data.id!,
+        data.name,
+        data.icon,
+        data.username,
+        data.password,
+        data.website || "",
+        data.notes || "",
+        data.created_at!,
+        data.updated_at,
+        data.lastUsed || null,
+        data.tagKey!
+      );
+      return res;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return {
     createPassword,
     getPasswords,
@@ -205,6 +230,7 @@ const usePasswordDB = () => {
     getAllPasswords,
     getPasswordCount,
     updatePasswordById,
+    insertPassword,
   };
 };
 

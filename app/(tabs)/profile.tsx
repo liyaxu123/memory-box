@@ -4,10 +4,12 @@ import Feather from "@expo/vector-icons/Feather";
 import { authenticate } from "@/utils/auth";
 import { exportData, importData } from "@/utils/exportImport";
 import usePasswordDB from "@/db/password";
+import usePasswordTagsDB from "@/db/password_tags";
 import Toast from "@ant-design/react-native/lib/toast";
 
 const Profile = () => {
-  const { getAllPasswords, createPassword, getPasswordCount } = usePasswordDB();
+  const { getAllTags, insertTag } = usePasswordTagsDB();
+  const { getAllPasswords, insertPassword, getPasswordCount } = usePasswordDB();
 
   // 导出密码本
   const exportPasswordBook = async () => {
@@ -16,10 +18,18 @@ const Profile = () => {
       fallbackLabel: "使用密码登录",
     });
     if (success) {
+      // 获取所有的标签
+      const tags = await getAllTags();
       // 获取所有的密码
       const passwords = await getAllPasswords();
       // 导出密码
-      exportData(passwords || []);
+      exportData({
+        version: 1,
+        tables: {
+          password_tags: tags,
+          passwords,
+        },
+      });
       Toast.success("导出成功");
     }
   };
@@ -28,11 +38,21 @@ const Profile = () => {
   const importPasswordBook = async () => {
     const count = await getPasswordCount();
     if (count === 0) {
-      const passwords = await importData();
+      const jsonData = await importData();
+      // 获取标签表和密码表
+      const { password_tags: tags, passwords } = jsonData?.tables || {};
+      // 导入标签表
+      if (tags.length > 0) {
+        for (let i = 0; i < tags.length; i++) {
+          const tagData = tags[i];
+          await insertTag(tagData);
+        }
+      }
+      // 导入密码表
       if (passwords.length > 0) {
         for (let i = 0; i < passwords.length; i++) {
           const password = passwords[i];
-          await createPassword(password);
+          await insertPassword(password);
         }
       }
       Toast.success("导入成功");
